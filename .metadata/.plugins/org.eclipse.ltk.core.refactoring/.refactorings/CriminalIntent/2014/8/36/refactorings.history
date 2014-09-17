@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;fragment_crime_list.xml&apos; to &apos;menu-v11&apos;&#x0A;- Original project: &apos;CriminalIntent&apos;&#x0A;- Destination element: &apos;menu-v11&apos;&#x0A;- Original element: &apos;fragment_crime_list.xml&apos;" description="Copy file" element1="res/menu/fragment_crime_list.xml" files="1" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1409452023089" target="/CriminalIntent/res/menu-v11" units="0" version="1.0"/>
+</session>

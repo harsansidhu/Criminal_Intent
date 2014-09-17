@@ -1,0 +1,132 @@
+package com.bignerdranch.android.criminalintent;
+
+import java.util.Date;
+import java.util.UUID;
+
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
+
+public class CrimeFragment extends Fragment {
+	public static final String EXTRA_CRIME_ID = 
+			"com.bignerdranch.android.criminalintent.crime_id";
+	public static final String DIALOG_DATE = "date"; 
+	public static final int REQUEST_DATE = 0;        // Request code for target fragment
+	
+	private Crime mCrime; 
+	private EditText mTitleField; 
+	private Button mDateButton;
+	private CheckBox mSolvedCheckBox; 
+
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		//UUID crimeId = (UUID)getActivity().getIntent()
+				//.getSerializableExtra(EXTRA_CRIME_ID);		
+		// Calls getArguements and getSer to get the value of EXTRA_CRIME_ID 
+		UUID crimeId = (UUID)getArguments().getSerializable(EXTRA_CRIME_ID);
+		
+		mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
+	}
+
+	private void updateDate() {
+		mDateButton.setText(mCrime.getDate().toString());
+	}
+	
+	@TargetApi(11)
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup parent,
+			Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.fragment_crime, parent, false);
+		
+		// Display the "up" button for ancestral navigation
+		// Wrap it so lower API versions are protected 
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+			getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+
+		mTitleField = (EditText)v.findViewById(R.id.crime_title);
+		mTitleField.setText(mCrime.getTitle());
+		mTitleField.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(
+					CharSequence c, int start, int before, int count) {
+				mCrime.setTitle(c.toString());
+			}
+			public void beforeTextChanged(
+					CharSequence c, int start, int count, int after) {
+				// This space intentionally left blank
+			}
+			public void afterTextChanged(Editable c) {
+				// This one too
+			}
+		});
+
+		// Button displays the date for now it is disabled (user cannot alter it)
+		mDateButton = (Button)v.findViewById(R.id.crime_date);
+		//mDateButton.setText(mCrime.getDate().toString()); Pre Challenge code 
+		updateDate(); 
+		// When the Date button is clicked a date picker dialogue is created 
+		mDateButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				FragmentManager fm = getActivity()
+						.getSupportFragmentManager();
+				// Call newInstance in order to be able to access the date
+				DatePickerFragment dialog = DatePickerFragment
+						.newInstance(mCrime.getDate()); 
+				dialog.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
+				dialog.show(fm, DIALOG_DATE);
+			}
+		});
+
+		// CheckBox will update the model when the user clicks on it 
+		mSolvedCheckBox = (CheckBox)v.findViewById(R.id.crime_solved);
+		mSolvedCheckBox.setChecked(mCrime.isSolved());
+		mSolvedCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				// Set the crime's solved property 
+				mCrime.setSolved(isChecked);
+			}
+		});
+
+		return v;
+	}	
+	
+	// Creates the fragment instance and bundles up and sets its arguments 
+	// Other classes must call this function in order to initialize a Crime Fragment
+	public static CrimeFragment newInstance(UUID crimeId) {
+		Bundle args = new Bundle(); 
+		args.putSerializable(EXTRA_CRIME_ID, crimeId);
+		
+		CrimeFragment fragment = new CrimeFragment();
+		fragment.setArguments(args);
+		
+		return fragment;
+	}
+	
+	// Overwriting onActivity Result in order to send the date to DatePickerFragment
+	// Retrieve the extra, set the date on the Crime and refresh the text of date button
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode != Activity.RESULT_OK) return; 
+		if (requestCode == REQUEST_DATE) {
+			Date date = (Date)data
+					.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+			mCrime.setDate(date);
+			updateDate(); 
+		}
+	}
+}

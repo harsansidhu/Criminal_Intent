@@ -1,0 +1,76 @@
+package com.bignerdranch.android.criminalintent;
+
+import java.util.ArrayList;
+import java.util.UUID;
+
+import android.content.Context;
+import android.util.Log;
+
+public class CrimeLab {
+	private static final String TAG = "CrimeLab";
+	private static final String FILENAME = "crimes.json";
+	
+	private ArrayList<Crime> mCrimes; // List of crimes 
+	private CriminalIntentJSONSerializer mSerializer;  
+	
+	private static CrimeLab sCrimeLab; // s for static 
+	private Context mAppContext; 
+
+	private CrimeLab(Context appContext) {
+		mAppContext = appContext;
+		mCrimes = new ArrayList<Crime>(); 
+		mSerializer = new CriminalIntentJSONSerializer(mAppContext, FILENAME);
+	
+		//  Populate the mCrimes array with 100 Crimes
+		//  After addCrime() no longer needed
+		for (int i = 0; i < 100; i++) {
+			Crime c = new Crime(); 
+			c.setTitle("Crime #" + i);
+			c.setSolved(i % 2 == 0); // Every other one is solved 
+			mCrimes.add(c); 
+		}
+	
+	}	
+
+	public static CrimeLab get(Context c) {
+		// sCrimeLab doesn't exist, create an instance using the Application Context
+		if (sCrimeLab == null) {
+			// Application context is global to the Application 
+			sCrimeLab = new CrimeLab(c.getApplicationContext());
+		}
+		
+		return sCrimeLab;
+	}
+	// Add Crime c to the Array of Crimes 
+	public void addCrime(Crime c) {
+		mCrimes.add(c);
+	}
+	
+	// save the Crimes in the JSON object
+	public boolean saveCrimes() {
+		// Save the Crimes and return true on successful completion
+	        try {
+	            mSerializer.saveCrimes(mCrimes);
+	            Log.d(TAG, "crimes saved to file");
+	            return true;
+	        } catch (Exception e) {
+	            Log.e(TAG, "Error saving crimes: ", e);
+	            return false;
+	        }
+	}
+	
+	// Return the array of Crime objects 
+	public ArrayList<Crime> getCrimes() {
+		return mCrimes; 
+	}
+	
+	// Return the Crime with the id 
+	public Crime getCrime(UUID id) {
+		for (Crime c: mCrimes) {
+			if (c.getId().equals(id))
+				return c; 
+		}
+		// I don't agree with this line 
+		return null; 
+	}
+}
